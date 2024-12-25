@@ -34,14 +34,14 @@ jobs:
       working-directory: ./kernel-${{ matrix.branch }}
       run: cp Microsoft/config-wsl ./.config
 
-    - name: Apply android Config 
-      if: ${{ matrix.branch == 'linux-msft-wsl-5.15.y' }}
-      working-directory: ./kernel-${{ matrix.branch }}
-      run: scripts/kconfig/merge_config.sh -m -y .config ../android.config
-
-    - name: Apply usb Config # for usb config
+    - name: Apply USB Config # for 5.4. branch only
+      if: ${{ matrix.branch == 'linux-msft-wsl-5.4.y' }}
       working-directory: ./kernel-${{ matrix.branch }}
       run: scripts/kconfig/merge_config.sh -m -y .config ../usb.config
+
+    - name: Apply android Config # for android config
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: scripts/kconfig/merge_config.sh -m -y .config ../android.config
 
     - name: Apply CAN Config
       working-directory: ./kernel-${{ matrix.branch }}
