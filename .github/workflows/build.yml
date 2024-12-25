@@ -7,14 +7,12 @@ on:
     - cron: '30 5 * * 1'
 
 jobs:
-
   build:
     strategy:
       matrix:
         branch: ['linux-msft-wsl-5.15.y']
     runs-on: ubuntu-latest
     steps:
-
     - name: Checkout WSL2 Kernel Builder
       uses: actions/checkout@v3
 
@@ -28,11 +26,17 @@ jobs:
     - name: Install Toolchain
       run: |
         sudo apt update
-        sudo apt install build-essential flex bison libssl-dev libelf-dev libncurses-dev autoconf libudev-dev libtool
+        sudo apt install -y build-essential flex bison libssl-dev libelf-dev libncurses-dev autoconf libudev-dev libtool bc
 
     - name: Get Default Config
       working-directory: ./kernel-${{ matrix.branch }}
       run: cp Microsoft/config-wsl ./.config
+
+    - name: Disable CONFIG_DEBUG_INFO_BTF
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: |
+        echo "Disabling CONFIG_DEBUG_INFO_BTF"
+        sed -i 's/# CONFIG_DEBUG_INFO_BTF is not set/CONFIG_DEBUG_INFO_BTF=n/' .config
 
     - name: Apply USB Config # for 5.4. branch only
       if: ${{ matrix.branch == 'linux-msft-wsl-5.4.y' }}
