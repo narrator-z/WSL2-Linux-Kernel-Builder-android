@@ -1,4 +1,4 @@
-# WSL2-Linux-Kernel-Builder
+# WSL2-Linux-Kernel-Builder-android
 ![kernel-build](https://github.com/narrator-z/WSL2-Linux-Kernel-Builder-android/actions/workflows/build.yml/badge.svg)
 
 This adds android(waydroid) support to WSL2 Kernel.
