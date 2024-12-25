@@ -1,6 +1,7 @@
 name: Kernel Build
 
 on:
+  workflow_dispatch:
   push:
   schedule:
     - cron: '30 5 * * 1'
@@ -10,15 +11,15 @@ jobs:
   build:
     strategy:
       matrix:
-        branch: ['linux-msft-wsl-6.6.y']
+        branch: ['linux-msft-wsl-5.15.y']
     runs-on: ubuntu-latest
     steps:
 
     - name: Checkout WSL2 Kernel Builder
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Checkout WSL2 Kernel Repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       with:
         repository: 'microsoft/WSL2-Linux-Kernel'
         ref: ${{ matrix.branch }}
@@ -33,11 +34,21 @@ jobs:
       working-directory: ./kernel-${{ matrix.branch }}
       run: cp Microsoft/config-wsl ./.config
 
-    - name: Apply ANDROID Config
+    - name: Apply android Config 
+      if: ${{ matrix.branch == 'linux-msft-wsl-5.15.y' }}
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: scripts/kconfig/merge_config.sh -m -y .config ../android.config
+
+    - name: Apply usb Config # for usb config
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: scripts/kconfig/merge_config.sh -m -y .config ../usb.config
+
+    - name: Apply CAN Config
       working-directory: ./kernel-${{ matrix.branch }}
       run: |
-        sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-android-WSL2\3/g" .config
-        scripts/kconfig/merge_config.sh -y .config ../android.config
+        sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g" .config
+        for file in ../[^usb]*.config; do scripts/kconfig/merge_config.sh -m -y .config $file ; done
+        scripts/kconfig/merge_config.sh -y .config ../can.config
 
     - name: Build
       working-directory: ./kernel-${{ matrix.branch }}
@@ -46,7 +57,7 @@ jobs:
         mv arch/x86/boot/bzImage arch/x86/boot/${{ matrix.branch }}-android-bzImage
 
     - name: Archive kernel
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.branch }}-android
         path: kernel-${{ matrix.branch }}/arch/x86/boot/${{ matrix.branch }}-android-bzImage
