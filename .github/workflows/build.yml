@@ -32,12 +32,6 @@ jobs:
       working-directory: ./kernel-${{ matrix.branch }}
       run: cp Microsoft/config-wsl ./.config
 
-    - name: Disable CONFIG_DEBUG_INFO_BTF
-      working-directory: ./kernel-${{ matrix.branch }}
-      run: |
-        echo "Disabling CONFIG_DEBUG_INFO_BTF"
-        sed -i 's/# CONFIG_DEBUG_INFO_BTF is not set/CONFIG_DEBUG_INFO_BTF=n/' .config
-
     - name: Apply USB Config # for 5.4. branch only
       if: ${{ matrix.branch == 'linux-msft-wsl-5.4.y' }}
       working-directory: ./kernel-${{ matrix.branch }}
@@ -50,9 +44,15 @@ jobs:
     - name: Apply CAN Config
       working-directory: ./kernel-${{ matrix.branch }}
       run: |
-        sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g" .config
+        sed -i 's/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g' .config
         for file in ../[^usb]*.config; do scripts/kconfig/merge_config.sh -m -y .config $file ; done
         scripts/kconfig/merge_config.sh -y .config ../can.config
+
+    - name: Disable CONFIG_DEBUG_INFO_BTF
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: |
+        echo "Disabling CONFIG_DEBUG_INFO_BTF"
+        sed -i 's/# CONFIG_DEBUG_INFO_BTF is not set/CONFIG_DEBUG_INFO_BTF=n/' .config
 
     - name: Build
       working-directory: ./kernel-${{ matrix.branch }}
